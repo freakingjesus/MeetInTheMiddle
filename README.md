@@ -78,7 +78,7 @@ with check (room_id = auth.jwt() ->> 'room_id');
 Create an API key at [Google AI Studio](https://aistudio.google.com) and set `GOOGLE_API_KEY`.
 
 ### 4. Environment variables
-Create `.env.local`:
+Copy `.env.example` to `.env.local` and fill in your keys:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
