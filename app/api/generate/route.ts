@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 import { verifyRoomToken } from '@/lib/roomToken';
 import { callGemini, parseGeminiResponse } from '@/lib/gemini';
 
@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
   if (Date.now() - last < 10_000)
     return NextResponse.json({ error: 'rate limited' }, { status: 429 });
   lastGen.set(roomId, Date.now());
+
+  const adminClient = createAdminClient();
 
   const { data: entries } = await adminClient
     .from('entries')

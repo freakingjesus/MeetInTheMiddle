@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 import { verifyRoomToken } from '@/lib/roomToken';
 
 export async function GET(req: NextRequest) {
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const limit = Number(searchParams.get('limit') || '20');
   const roomId = verifyRoomToken(roomToken);
   if (!roomId) return NextResponse.json({ error: 'invalid token' }, { status: 401 });
+  const adminClient = createAdminClient();
 
   const { data } = await adminClient
     .from('summaries')
