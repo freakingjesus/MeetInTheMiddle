@@ -17,7 +17,7 @@ pnpm install
 ```
 
 ### 2. Supabase setup
-1. Create a project at [supabase.com](https://supabase.com) and note `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+1. Create a project at [supabase.com](https://supabase.com) and note `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 2. In **Project Settings → API**, generate a new **service role key**. Store it safely and rotate if leaked (`SUPABASE_SERVICE_ROLE_KEY`).
 3. In the SQL Editor run the schema below.
 4. Enable Realtime for `status` and `entries` tables and create a broadcast channel named `room-{code}` for presence updates.
@@ -80,8 +80,8 @@ Create an API key at [Google AI Studio](https://aistudio.google.com) and set `GO
 ### 4. Environment variables
 Create `.env.local`:
 ```
-SUPABASE_URL=your-url
-SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=your-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role
 GOOGLE_API_KEY=your-gemini-key
 ROOM_JWT_SECRET=super-secret-string
@@ -95,7 +95,7 @@ Open http://localhost:3000
 
 ### 6. (Optional) Deploy to Vercel
 - Create a new project and import this repo
-- Add the same env vars in Vercel dashboard
+- Add the same env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_API_KEY`, `ROOM_JWT_SECRET`) in the Vercel dashboard
 - Deploy
 
 ### Testing
