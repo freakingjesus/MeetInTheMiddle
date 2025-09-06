@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     .from('rooms')
     .select('id')
     .eq('code', roomCode)
-    .single();
+    .maybeSingle();
   if (error) {
     console.error(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
