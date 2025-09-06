@@ -18,6 +18,10 @@ export async function POST(req: NextRequest) {
     .eq('id', roomId)
     .single();
 
+  if (!room) {
+    return NextResponse.json({ error: 'room not found' }, { status: 404 });
+  }
+
   adminClient
     .channel(`room-${room.code}`)
     .send({ type: 'broadcast', event: 'READY_CHANGE', payload: { who: side, ready: true } });
