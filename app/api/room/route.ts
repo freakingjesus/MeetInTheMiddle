@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     .select('id')
     .eq('code', roomCode)
     .maybeSingle();
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     console.error(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

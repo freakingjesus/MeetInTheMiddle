@@ -170,4 +170,54 @@ describe.sequential('POST /api/room error handling', () => {
     expect(await res.json()).toEqual({ roomId: '1', roomToken: 'token', code: 'abc' });
     expect(signRoomToken).toHaveBeenCalledWith('1');
   });
+
+  test('creates room when select returns PGRST116', async () => {
+    vi.resetModules();
+    vi.doMock('@/lib/supabase', () => {
+      let roomsCall = 0;
+      return {
+        adminClient: {
+          from: (table: string) => {
+            if (table === 'rooms') {
+              if (roomsCall === 0) {
+                roomsCall++;
+                return {
+                  select: () => ({
+                    eq: () => ({
+                      maybeSingle: async () => ({
+                        data: null,
+                        error: { code: 'PGRST116', message: 'No rows found' },
+                      }),
+                    }),
+                  }),
+                };
+              }
+              return {
+                insert: () => ({
+                  select: () => ({
+                    single: async () => ({ data: { id: '1' }, error: null }),
+                  }),
+                }),
+              };
+            }
+            if (table === 'status') {
+              return {
+                insert: async () => ({ error: null }),
+              };
+            }
+            throw new Error('unexpected table ' + table);
+          },
+        },
+      };
+    });
+    const signRoomToken = vi.fn(() => 'token');
+    vi.doMock('@/lib/roomToken', () => ({ signRoomToken }));
+
+    const { POST } = await import('../app/api/room/route');
+    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ roomId: '1', roomToken: 'token', code: 'abc' });
+    expect(signRoomToken).toHaveBeenCalledWith('1');
+  });
 });
