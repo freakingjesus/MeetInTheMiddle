@@ -16,21 +16,26 @@ export async function POST(req: NextRequest) {
   lastGen.set(roomId, Date.now());
 
   const adminClient = createAdminClient();
+  try {
+    const { data: entries } = await adminClient
+      .from('entries')
+      .select('side, content')
+      .eq('room_id', roomId);
 
-  const { data: entries } = await adminClient
-    .from('entries')
-    .select('side, content')
-    .eq('room_id', roomId);
+    const your = entries?.find((e) => e.side === 'your')?.content || '';
+    const their = entries?.find((e) => e.side === 'their')?.content || '';
 
-  const your = entries?.find((e) => e.side === 'your')?.content || '';
-  const their = entries?.find((e) => e.side === 'their')?.content || '';
+    const text = await callGemini(your, their);
+    const summary = parseGeminiResponse(text);
 
-  const text = await callGemini(your, their);
-  const summary = parseGeminiResponse(text);
+    if (save) {
+      await adminClient.from('summaries').insert({ room_id: roomId, content: JSON.stringify(summary) });
+    }
 
-  if (save) {
-    await adminClient.from('summaries').insert({ room_id: roomId, content: JSON.stringify(summary) });
+    return NextResponse.json(summary);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'unknown error';
+    console.error(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json(summary);
 }
