@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 import { verifyRoomToken } from '@/lib/roomToken';
 
 export async function POST(req: NextRequest) {
   const { roomToken, side, content } = await req.json();
   const roomId = verifyRoomToken(roomToken);
   if (!roomId) return NextResponse.json({ error: 'invalid token' }, { status: 401 });
+  const adminClient = createAdminClient();
 
   await adminClient.from('entries').insert({ room_id: roomId, side, content });
   await adminClient

@@ -5,7 +5,7 @@ describe.sequential('POST /api/room error handling', () => {
   test('returns 500 when room select fails', async () => {
     vi.resetModules();
     vi.doMock('@/lib/supabase', () => ({
-      adminClient: {
+      createAdminClient: () => ({
         from: (table: string) => {
           if (table === 'rooms') {
             return {
@@ -23,7 +23,7 @@ describe.sequential('POST /api/room error handling', () => {
           }
           throw new Error('unexpected table ' + table);
         },
-      },
+      }),
     }));
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
 
@@ -39,7 +39,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/supabase', () => {
       let roomsCall = 0;
       return {
-        adminClient: {
+        createAdminClient: () => ({
           from: (table: string) => {
             if (table === 'rooms') {
               if (roomsCall === 0) {
@@ -67,7 +67,7 @@ describe.sequential('POST /api/room error handling', () => {
             }
             throw new Error('unexpected table ' + table);
           },
-        },
+        }),
       };
     });
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
@@ -84,7 +84,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/supabase', () => {
       let roomsCall = 0;
       return {
-        adminClient: {
+        createAdminClient: () => ({
           from: (table: string) => {
             if (table === 'rooms') {
               if (roomsCall === 0) {
@@ -112,7 +112,7 @@ describe.sequential('POST /api/room error handling', () => {
             }
             throw new Error('unexpected table ' + table);
           },
-        },
+        }),
       };
     });
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
@@ -129,7 +129,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/supabase', () => {
       let roomsCall = 0;
       return {
-        adminClient: {
+        createAdminClient: () => ({
           from: (table: string) => {
             if (table === 'rooms') {
               if (roomsCall === 0) {
@@ -157,7 +157,7 @@ describe.sequential('POST /api/room error handling', () => {
             }
             throw new Error('unexpected table ' + table);
           },
-        },
+        }),
       };
     });
     const signRoomToken = vi.fn(() => 'token');
@@ -176,7 +176,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/supabase', () => {
       let roomsCall = 0;
       return {
-        adminClient: {
+        createAdminClient: () => ({
           from: (table: string) => {
             if (table === 'rooms') {
               if (roomsCall === 0) {
@@ -207,7 +207,7 @@ describe.sequential('POST /api/room error handling', () => {
             }
             throw new Error('unexpected table ' + table);
           },
-        },
+        }),
       };
     });
     const signRoomToken = vi.fn(() => 'token');

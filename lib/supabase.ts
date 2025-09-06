@@ -2,11 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!url || !anonKey || !serviceRoleKey) {
+if (!url || !anonKey) {
   throw new Error(
-    'Missing Supabase environment variables. Check NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY.'
+    'Missing Supabase environment variables. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
   );
 }
 
@@ -16,6 +15,16 @@ export const createBrowserClient = (token?: string) =>
     global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
   });
 
-export const adminClient = createClient(url, serviceRoleKey, {
-  auth: { persistSession: false },
-});
+// Lazily create the admin client so the service-role key is only accessed server-side
+export const createAdminClient = () => {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error(
+      'Missing Supabase environment variable SUPABASE_SERVICE_ROLE_KEY.'
+    );
+  }
+
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+};

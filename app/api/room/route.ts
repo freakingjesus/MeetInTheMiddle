@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminClient } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase';
 import { signRoomToken } from '@/lib/roomToken';
 import { randomBytes } from 'crypto';
 
 export async function POST(req: NextRequest) {
   const { code } = await req.json();
   const roomCode = (code || randomBytes(3).toString('hex')).toLowerCase();
+  const adminClient = createAdminClient();
 
   const { data: roomData, error } = await adminClient
     .from('rooms')
