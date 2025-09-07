@@ -18,7 +18,7 @@ pnpm install
 
 ### 2. Supabase setup
 1. Create a project at [supabase.com](https://supabase.com) and note `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-2. In **Project Settings → API**, generate a new **service role key**. Store it safely and rotate if leaked (`SUPABASE_SERVICE_ROLE_KEY`).
+2. In **Project Settings → API**, copy your project's **JWT secret** (use this for `ROOM_JWT_SECRET`) and generate a new **service role key**. Store the key safely and rotate if leaked (`SUPABASE_SERVICE_ROLE_KEY`).
 3. In the SQL Editor run the schema below.
 4. Enable Realtime for `status` and `entries` tables and create a broadcast channel named `room-{code}` for presence updates.
 
@@ -86,6 +86,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role
 GOOGLE_API_KEY=your-gemini-key
 ROOM_JWT_SECRET=super-secret-string
 ```
+
+The `ROOM_JWT_SECRET` must match the JWT secret shown in your Supabase project's API settings.
 
 ### 5. Run locally
 ```bash

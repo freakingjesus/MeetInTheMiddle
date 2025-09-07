@@ -11,6 +11,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const [theirReady, setTheirReady] = useState(false);
   const [summary, setSummary] = useState<GeminiSummary | null>(null);
   const [save, setSave] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem(`room-token-${code}`) : null;
@@ -49,15 +50,36 @@ export default function RoomPage({ params }: { params: { code: string } }) {
 
   const generate = async () => {
     const token = localStorage.getItem(`room-token-${code}`);
+    setError(null);
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ roomToken: token, save }),
     });
-    const data = await res.json();
-    setSummary(data);
-    setYourReady(false);
-    setTheirReady(false);
+    if (!res.ok) {
+      setError('Failed to generate summary');
+      setSummary(null);
+      return;
+    }
+    try {
+      const data = await res.json();
+      if (
+        !data ||
+        typeof data.summary !== 'string' ||
+        typeof data.toneNotes !== 'string' ||
+        (data.nextSteps && !Array.isArray(data.nextSteps))
+      ) {
+        setError('Failed to generate summary');
+        setSummary(null);
+        return;
+      }
+      setSummary(data);
+      setYourReady(false);
+      setTheirReady(false);
+    } catch {
+      setError('Failed to generate summary');
+      setSummary(null);
+    }
   };
 
   const thumb = async (which: 'your' | 'their', value: 'up' | 'down') => {
@@ -130,6 +152,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} />
         Save to History
       </label>
+      {error && <p className="text-red-500">{error}</p>}
       {summary && (
         <div className="border p-4 rounded w-full max-w-2xl flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -137,11 +160,13 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             <h3 className="font-semibold">Summary</h3>
           </div>
           <p>{summary.summary}</p>
-          <ul className="list-disc pl-5">
-            {summary.nextSteps.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
+          {summary.nextSteps && (
+            <ul className="list-disc pl-5">
+              {summary.nextSteps.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+          )}
           <p className="text-sm text-gray-500">{summary.toneNotes}</p>
           <div className="flex gap-4">
             <button onClick={() => thumb('your', 'up')}>👍</button>
