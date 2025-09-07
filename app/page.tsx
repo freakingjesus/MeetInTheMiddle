@@ -18,6 +18,10 @@ export default function Home() {
         body: JSON.stringify({ code: roomCode, name }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to enter room');
+        return;
+      }
       localStorage.setItem(`room-token-${roomCode}`, data.roomToken);
       localStorage.setItem(`room-side-${roomCode}`, data.side);
       if (name) localStorage.setItem(`room-name-${roomCode}`, name);
