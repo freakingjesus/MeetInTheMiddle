@@ -243,13 +243,4 @@ describe.sequential('POST /api/room error handling', () => {
     const { POST } = await import('../app/api/room/route');
     const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({
-      side: 'your',
-      your_name: 'Alice',
-      their_name: null,
-      roomToken: 'token',
-    });
-    expect(signRoomToken).toHaveBeenCalledWith('1', 'your', 'Alice');
-  });
-});
+    expect(res.status).
