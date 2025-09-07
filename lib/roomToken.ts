@@ -8,8 +8,14 @@ if (!secret) {
   );
 }
 
-export function signRoomToken(roomId: string): string {
-  return jwt.sign({ room_id: roomId }, secret!, { expiresIn: "7d" });
+export function signRoomToken(
+  roomId: string,
+  side: "your" | "their",
+  name: string
+): string {
+  return jwt.sign({ room_id: roomId, side, name }, secret!, {
+    expiresIn: "7d",
+  });
 }
 
 export function verifyRoomToken(token: string): string | null {
