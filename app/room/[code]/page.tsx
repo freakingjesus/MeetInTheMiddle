@@ -72,11 +72,29 @@ export default function RoomPage({ params }: { params: { code: string } }) {
 
   const submit = async (side: 'your' | 'their', content: string) => {
     const token = localStorage.getItem(`room-token-${code}`);
-    await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomToken: token, side, content }),
-    });
+    if (!token) {
+      setError('Missing room token. Please return to the home page and rejoin.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomToken: token, side, content }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || 'Failed to submit');
+        if (res.status === 401) {
+          localStorage.removeItem(`room-token-${code}`);
+        }
+        return;
+      }
+      if (side === 'your') setYourReady(true);
+      if (side === 'their') setTheirReady(true);
+    } catch {
+      setError('Failed to submit');
+    }
   };
 
   const generate = async () => {
