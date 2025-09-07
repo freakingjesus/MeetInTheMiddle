@@ -38,6 +38,11 @@ describe('POST /api/generate', () => {
               }),
             };
           }
+          if (table === 'summaries') {
+            return {
+              insert: async () => ({ error: null }),
+            };
+          }
           throw new Error('unexpected table ' + table);
         },
         channel: () => ({ send: vi.fn() }),
