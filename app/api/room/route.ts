@@ -17,6 +17,11 @@ export async function POST(req: NextRequest) {
   const { code, name }: JoinRoomBody = await req.json();
   const roomCode = (code || randomBytes(3).toString('hex')).toLowerCase();
   const adminClient = createAdminClient();
+  const sign = signRoomToken as unknown as (
+    roomId: string,
+    side: 'your' | 'their',
+    name: string | null
+  ) => string;
 
   // 1) Find (or create) the room by code
   const { data: roomData, error } = await adminClient
@@ -97,6 +102,16 @@ export async function POST(req: NextRequest) {
     const yourName: string | null = statusData?.your_name ?? null;
     const theirName: string | null = statusData?.their_name ?? null;
 
+    // Reject if both slots are already taken by different names
+    if (
+      yourName &&
+      theirName &&
+      trimmed !== yourName &&
+      trimmed !== theirName
+    ) {
+      return NextResponse.json({ error: 'room full' }, { status: 409 });
+    }
+
     let side: 'your' | 'their';
     if (yourName === trimmed) side = 'your';
     else if (theirName === trimmed) side = 'their';
@@ -120,7 +135,7 @@ export async function POST(req: NextRequest) {
 
     // Optional realtime broadcast; don't block on failures
     try {
-      // @ts-ignore - supabase-js Realtime channel may or may not be present on this client
+      // @ts-expect-error - supabase-js Realtime channel may or may not be present on this client
       adminClient.channel?.(`room-${roomCode}`)?.send?.({
         type: 'broadcast',
         event: 'NAME_CHANGE',
@@ -130,9 +145,8 @@ export async function POST(req: NextRequest) {
       console.warn('Realtime NAME_CHANGE broadcast failed (non-fatal):', e);
     }
 
-    // Support signRoomToken(roomId, side, name)
-    const _sign: any = signRoomToken;
-    const roomToken = _sign(room.id, side, trimmed);
+      // Support signRoomToken(roomId, side, name)
+      const roomToken = sign(room.id, side, trimmed);
 
     return NextResponse.json({
       roomId: room.id,
@@ -146,8 +160,7 @@ export async function POST(req: NextRequest) {
 
   // 3) Fallback: no name provided → assign a side randomly, return token
   const side: 'your' | 'their' = Math.random() < 0.5 ? 'your' : 'their';
-  const _sign: any = signRoomToken;
-  const roomToken = _sign(room.id, side, null);
+  const roomToken = sign(room.id, side, null);
 
   return NextResponse.json({
     roomId: room.id,
