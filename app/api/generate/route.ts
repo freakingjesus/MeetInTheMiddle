@@ -62,6 +62,14 @@ export async function POST(req: NextRequest) {
       summary = parseGeminiResponse(text);
     }
 
+    const { error: summaryError } = await adminClient
+      .from("summaries")
+      .insert({ room_id: roomId, content: JSON.stringify(summary) });
+
+    if (summaryError) {
+      throw new Error(`Failed to save summary: ${summaryError.message}`);
+    }
+
     const { data: room } = await adminClient
       .from("rooms")
       .select("code")

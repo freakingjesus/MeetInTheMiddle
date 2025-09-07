@@ -49,6 +49,14 @@ export default function RoomPage({ params }: { params: { code: string } }) {
           if (res.data.their_name) setTheirName(res.data.their_name);
         }
       });
+
+    fetch(`/api/history?roomToken=${token}&limit=1`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSummary(data[0] as GeminiSummary);
+        }
+      });
     const channel = client
       .channel(`room-${code}`)
       .on('broadcast', { event: 'ENTRY_SUBMITTED' }, ({ payload }) => {
