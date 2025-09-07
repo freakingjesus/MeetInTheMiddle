@@ -4,18 +4,24 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [code, setCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const enterRoom = async () => {
+    setIsLoading(true);
     const roomCode = code || Math.random().toString(36).slice(2, 8);
-    const res = await fetch('/api/room', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: roomCode }),
-    });
-    const data = await res.json();
-    localStorage.setItem(`room-token-${roomCode}`, data.roomToken);
-    router.push(`/room/${roomCode}`);
+    try {
+      const res = await fetch('/api/room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: roomCode }),
+      });
+      const data = await res.json();
+      localStorage.setItem(`room-token-${roomCode}`, data.roomToken);
+      router.push(`/room/${roomCode}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,9 +36,14 @@ export default function Home() {
       />
       <button
         onClick={enterRoom}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        disabled={isLoading}
+        className="bg-blue-500 text-white px-4 py-2 rounded transition-colors transition-transform hover:bg-blue-600 active:scale-95 disabled:opacity-50"
       >
-        Create / Join
+        {isLoading
+          ? code
+            ? 'Joining room...'
+            : 'Creating room...'
+          : 'Create / Join'}
       </button>
     </main>
   );
