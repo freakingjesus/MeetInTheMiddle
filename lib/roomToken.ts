@@ -24,7 +24,8 @@ export function verifyRoomToken(token: string): string | null {
       room_id?: string;
     };
     return payload.room_id ?? null;
-  } catch {
+  } catch (err) {
+    console.error('verifyRoomToken failed:', err);
     return null;
   }
 }
