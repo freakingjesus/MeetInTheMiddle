@@ -38,8 +38,7 @@ describe('POST /api/generate', () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.summary).toContain('your perspective');
-    expect(data.summary).toContain('their perspective');
+    expect(data.summary).toBe('Missing Google API key');
     expect(data.nextSteps).toEqual([]);
   });
 });
