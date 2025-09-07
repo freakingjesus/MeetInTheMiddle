@@ -153,10 +153,21 @@ describe.sequential('POST /api/room error handling', () => {
             if (table === 'status') {
               return {
                 insert: async () => ({ error: null }),
+                select: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: { your_name: null, their_name: null }, error: null }),
+                  }),
+                }),
+                upsert: () => ({
+                  select: () => ({
+                    single: async () => ({ data: { your_name: 'Alice', their_name: null }, error: null }),
+                  }),
+                }),
               };
             }
             throw new Error('unexpected table ' + table);
           },
+          channel: () => ({ send: vi.fn() }),
         }),
       };
     });
@@ -167,10 +178,13 @@ describe.sequential('POST /api/room error handling', () => {
     const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toMatchObject({ roomId: '1', roomToken: 'token', code: 'abc' });
-    expect(['your', 'their']).toContain(data.side);
-    expect(signRoomToken).toHaveBeenCalledWith('1');
+    expect(await res.json()).toEqual({
+      side: 'your',
+      your_name: 'Alice',
+      their_name: null,
+      roomToken: 'token',
+    });
+    expect(signRoomToken).toHaveBeenCalledWith('1', 'your', 'Alice');
   });
 
   test('creates room when select returns PGRST116', async () => {
@@ -205,10 +219,21 @@ describe.sequential('POST /api/room error handling', () => {
             if (table === 'status') {
               return {
                 insert: async () => ({ error: null }),
+                select: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: { your_name: null, their_name: null }, error: null }),
+                  }),
+                }),
+                upsert: () => ({
+                  select: () => ({
+                    single: async () => ({ data: { your_name: 'Alice', their_name: null }, error: null }),
+                  }),
+                }),
               };
             }
             throw new Error('unexpected table ' + table);
           },
+          channel: () => ({ send: vi.fn() }),
         }),
       };
     });
@@ -218,10 +243,4 @@ describe.sequential('POST /api/room error handling', () => {
     const { POST } = await import('../app/api/room/route');
     const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data).toMatchObject({ roomId: '1', roomToken: 'token', code: 'abc' });
-    expect(['your', 'their']).toContain(data.side);
-    expect(signRoomToken).toHaveBeenCalledWith('1');
-  });
-});
+    expect(res.status).
