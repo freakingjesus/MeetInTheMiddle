@@ -4,7 +4,7 @@ import { signRoomToken } from '@/lib/roomToken';
 import { randomBytes } from 'crypto';
 
 export async function POST(req: NextRequest) {
-  const { code } = await req.json();
+  const { code, name } = await req.json();
   const roomCode = (code || randomBytes(3).toString('hex')).toLowerCase();
   const adminClient = createAdminClient();
 
@@ -39,6 +39,47 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const roomToken = signRoomToken(room.id);
-  return NextResponse.json({ roomId: room.id, roomToken, code: roomCode });
+  const { data: statusData, error: statusSelectError } = await adminClient
+    .from('status')
+    .select('your_name, their_name')
+    .eq('room_id', room.id)
+    .maybeSingle();
+  if (statusSelectError && statusSelectError.code !== 'PGRST116') {
+    console.error(statusSelectError);
+    return NextResponse.json({ error: statusSelectError.message }, { status: 500 });
+  }
+
+  const yourName = statusData?.your_name ?? null;
+  const theirName = statusData?.their_name ?? null;
+
+  let side: 'your' | 'their';
+  if (yourName === name) side = 'your';
+  else if (theirName === name) side = 'their';
+  else if (!yourName) side = 'your';
+  else side = 'their';
+
+  const { data: updatedStatus, error: upsertError } = await adminClient
+    .from('status')
+    .upsert(
+      { room_id: room.id, [`${side}_name`]: name },
+      { onConflict: 'room_id' }
+    )
+    .select('your_name, their_name')
+    .single();
+  if (upsertError) {
+    console.error(upsertError);
+    return NextResponse.json({ error: upsertError.message }, { status: 500 });
+  }
+
+  adminClient
+    .channel(`room-${roomCode}`)
+    .send({ type: 'broadcast', event: 'NAME_CHANGE', payload: { who: side, name } });
+
+  const roomToken = signRoomToken(room.id, side, name);
+  return NextResponse.json({
+    side,
+    your_name: updatedStatus?.your_name ?? null,
+    their_name: updatedStatus?.their_name ?? null,
+    roomToken,
+  });
 }
