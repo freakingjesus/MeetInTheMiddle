@@ -29,6 +29,15 @@ describe('POST /api/generate', () => {
               }),
             };
           }
+          if (table === 'status') {
+            return {
+              select: () => ({
+                eq: () => ({
+                  single: async () => ({ data: { your_name: 'Alice', their_name: 'Bob' }, error: null }),
+                }),
+              }),
+            };
+          }
           throw new Error('unexpected table ' + table);
         },
         channel: () => ({ send: vi.fn() }),

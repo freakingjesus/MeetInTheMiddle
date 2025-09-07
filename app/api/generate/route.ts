@@ -33,12 +33,24 @@ export async function POST(req: NextRequest) {
       .select("side, content")
       .eq("room_id", roomId);
 
+    const { data: status, error: statusError } = await adminClient
+      .from("status")
+      .select("your_name, their_name")
+      .eq("room_id", roomId)
+      .single();
+
+    if (statusError) {
+      throw new Error(`Failed to fetch status: ${statusError.message}`);
+    }
+
     if (entriesError) {
       throw new Error(`Failed to fetch entries: ${entriesError.message}`);
     }
 
     const your = entries?.find((e) => e.side === "your")?.content ?? "";
     const their = entries?.find((e) => e.side === "their")?.content ?? "";
+    const yourName = status?.your_name ?? "Your Side";
+    const theirName = status?.their_name ?? "Their Side";
 
     let summary: GeminiSummary;
 
@@ -46,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!process.env.GOOGLE_API_KEY) {
       summary = { summary: "Missing Google API key", nextSteps: [], toneNotes: "" };
     } else {
-      const text = await callGemini(your, their);
+      const text = await callGemini(your, their, yourName, theirName);
       summary = parseGeminiResponse(text);
     }
 

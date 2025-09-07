@@ -43,6 +43,8 @@ create table status (
   room_id uuid references rooms(id) on delete cascade unique,
   your_ready boolean default false,
   their_ready boolean default false,
+  your_name text,
+  their_name text,
   updated_at timestamptz default now()
 );
 
