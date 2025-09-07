@@ -28,7 +28,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
 
     const { POST } = await import('../app/api/room/route');
-    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'select fail' });
@@ -73,7 +73,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
 
     const { POST } = await import('../app/api/room/route');
-    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'insert fail' });
@@ -118,7 +118,7 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
 
     const { POST } = await import('../app/api/room/route');
-    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'status fail' });
@@ -164,10 +164,12 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken }));
 
     const { POST } = await import('../app/api/room/route');
-    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ roomId: '1', roomToken: 'token', code: 'abc' });
+    const data = await res.json();
+    expect(data).toMatchObject({ roomId: '1', roomToken: 'token', code: 'abc' });
+    expect(['your', 'their']).toContain(data.side);
     expect(signRoomToken).toHaveBeenCalledWith('1');
   });
 
@@ -214,10 +216,12 @@ describe.sequential('POST /api/room error handling', () => {
     vi.doMock('@/lib/roomToken', () => ({ signRoomToken }));
 
     const { POST } = await import('../app/api/room/route');
-    const req = { json: async () => ({ code: 'abc' }) } as unknown as NextRequest;
+    const req = { json: async () => ({ code: 'abc', name: 'Alice' }) } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ roomId: '1', roomToken: 'token', code: 'abc' });
+    const data = await res.json();
+    expect(data).toMatchObject({ roomId: '1', roomToken: 'token', code: 'abc' });
+    expect(['your', 'their']).toContain(data.side);
     expect(signRoomToken).toHaveBeenCalledWith('1');
   });
 });

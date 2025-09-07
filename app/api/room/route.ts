@@ -4,7 +4,7 @@ import { signRoomToken } from '@/lib/roomToken';
 import { randomBytes } from 'crypto';
 
 export async function POST(req: NextRequest) {
-  const { code } = await req.json();
+  const { code, name } = await req.json();
   const roomCode = (code || randomBytes(3).toString('hex')).toLowerCase();
   const adminClient = createAdminClient();
 
@@ -40,5 +40,6 @@ export async function POST(req: NextRequest) {
   }
 
   const roomToken = signRoomToken(room.id);
-  return NextResponse.json({ roomId: room.id, roomToken, code: roomCode });
+  const side = Math.random() < 0.5 ? 'your' : 'their';
+  return NextResponse.json({ roomId: room.id, roomToken, code: roomCode, side });
 }
