@@ -12,6 +12,8 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const [summary, setSummary] = useState<GeminiSummary | null>(null);
   const [save, setSave] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem(`room-token-${code}`) : null;
@@ -51,17 +53,20 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const generate = async () => {
     const token = localStorage.getItem(`room-token-${code}`);
     setError(null);
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomToken: token, save }),
-    });
-    if (!res.ok) {
-      setError('Failed to generate summary');
-      setSummary(null);
-      return;
-    }
+    setGenerating(true);
+    setElapsed(0);
+    const timer = setInterval(() => setElapsed((e) => e + 1), 1000);
     try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomToken: token, save }),
+      });
+      if (!res.ok) {
+        setError('Failed to generate summary');
+        setSummary(null);
+        return;
+      }
       const data = await res.json();
       if (
         !data ||
@@ -79,6 +84,9 @@ export default function RoomPage({ params }: { params: { code: string } }) {
     } catch {
       setError('Failed to generate summary');
       setSummary(null);
+    } finally {
+      clearInterval(timer);
+      setGenerating(false);
     }
   };
 
@@ -144,8 +152,9 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <button
           onClick={generate}
           className="bg-purple-500 text-white px-4 py-2 rounded"
+          disabled={generating}
         >
-          Generate Neutral Summary
+          {generating ? `Calling Gemini... ${elapsed}s` : 'Generate Neutral Summary'}
         </button>
       )}
       <label className="flex items-center gap-2">
