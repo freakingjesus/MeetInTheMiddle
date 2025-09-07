@@ -10,7 +10,6 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const [yourReady, setYourReady] = useState(false);
   const [theirReady, setTheirReady] = useState(false);
   const [summary, setSummary] = useState<GeminiSummary | null>(null);
-  const [save, setSave] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -60,7 +59,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomToken: token, save }),
+        body: JSON.stringify({ roomToken: token }),
       });
       if (!res.ok) {
         setError('Failed to generate summary');
@@ -88,15 +87,6 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       clearInterval(timer);
       setGenerating(false);
     }
-  };
-
-  const thumb = async (which: 'your' | 'their', value: 'up' | 'down') => {
-    const token = localStorage.getItem(`room-token-${code}`);
-    await fetch('/api/thumb', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomToken: token, which, value }),
-    });
   };
 
   return (
@@ -157,10 +147,6 @@ export default function RoomPage({ params }: { params: { code: string } }) {
           {generating ? `Calling Gemini... ${elapsed}s` : 'Generate Neutral Summary'}
         </button>
       )}
-      <label className="flex items-center gap-2">
-        <input type="checkbox" checked={save} onChange={(e) => setSave(e.target.checked)} />
-        Save to History
-      </label>
       {error && <p className="text-red-500">{error}</p>}
       {summary && (
         <div className="border p-4 rounded w-full max-w-2xl flex flex-col gap-2">
@@ -177,10 +163,6 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             </ul>
           )}
           <p className="text-sm text-gray-500">{summary.toneNotes}</p>
-          <div className="flex gap-4">
-            <button onClick={() => thumb('your', 'up')}>👍</button>
-            <button onClick={() => thumb('your', 'down')}>👎</button>
-          </div>
         </div>
       )}
     </main>
