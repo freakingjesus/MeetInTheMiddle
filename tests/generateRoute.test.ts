@@ -20,11 +20,6 @@ describe('POST /api/generate', () => {
               }),
             };
           }
-          if (table === 'summaries') {
-            return {
-              insert: async () => ({ error: null }),
-            };
-          }
           throw new Error('unexpected table ' + table);
         },
       }),
@@ -33,7 +28,7 @@ describe('POST /api/generate', () => {
 
     const { POST } = await import('../app/api/generate/route');
     const req = {
-      json: async () => ({ roomToken: 't', save: false }),
+      json: async () => ({ roomToken: 't' }),
     } as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(200);

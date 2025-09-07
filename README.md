@@ -6,8 +6,6 @@ A playful, neutral AI referee for couple discussions. Built with Next.js 14 App 
 - Join a room via 6-char code, no accounts required
 - Each side submits their perspective and sees when the other is ready
 - Generate a neutral summary with practical next steps using Gemini
-- Optional thumbs up/down reactions
-- Optional saving of summaries to history
 
 ## Getting Started
 
@@ -40,14 +38,6 @@ create table entries (
   created_at timestamptz default now()
 );
 
-create table summaries (
-  id uuid primary key default gen_random_uuid(),
-  room_id uuid references rooms(id) on delete cascade,
-  content text,
-  helpful jsonb,
-  created_at timestamptz default now()
-);
-
 create table status (
   id uuid primary key default gen_random_uuid(),
   room_id uuid references rooms(id) on delete cascade unique,
@@ -58,14 +48,9 @@ create table status (
 
 alter table rooms enable row level security;
 alter table entries enable row level security;
-alter table summaries enable row level security;
 alter table status enable row level security;
 
 create policy "entries_room" on entries for all
-using (room_id = auth.jwt() ->> 'room_id')
-with check (room_id = auth.jwt() ->> 'room_id');
-
-create policy "summaries_room" on summaries for all
 using (room_id = auth.jwt() ->> 'room_id')
 with check (room_id = auth.jwt() ->> 'room_id');
 
@@ -116,7 +101,7 @@ pnpm dev
 ## Directory structure
 ```
 app/              # Next.js app router routes
-app/api/*         # API routes for room, submit, generate, thumb, history
+app/api/*         # API routes for room, submit, generate
 lib/              # Supabase, Gemini helpers
 public/assets/    # placeholder icons (replace boxing.svg/hug.svg with real images as needed)
 ```

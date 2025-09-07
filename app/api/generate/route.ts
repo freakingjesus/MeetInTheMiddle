@@ -8,7 +8,7 @@ const lastGen = new Map<string, number>();
 
 export async function POST(req: NextRequest) {
   try {
-    const { roomToken, save } = await req.json();
+    const { roomToken } = await req.json();
 
     if (!roomToken) {
       return NextResponse.json({ error: "missing token" }, { status: 400 });
@@ -48,16 +48,6 @@ export async function POST(req: NextRequest) {
     } else {
       const text = await callGemini(your, their);
       summary = parseGeminiResponse(text);
-    }
-
-    if (save) {
-      const { error: insertError } = await adminClient
-        .from("summaries")
-        .insert({ room_id: roomId, content: JSON.stringify(summary) });
-
-      if (insertError) {
-        throw new Error(`Failed to save summary: ${insertError.message}`);
-      }
     }
 
     return NextResponse.json(summary);
