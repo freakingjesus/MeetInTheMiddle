@@ -179,6 +179,8 @@ describe.sequential('POST /api/room error handling', () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
+      roomId: '1',
+      code: 'abc',
       side: 'your',
       your_name: 'Alice',
       their_name: null,
@@ -245,11 +247,65 @@ describe.sequential('POST /api/room error handling', () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
+      roomId: '1',
+      code: 'abc',
       side: 'your',
       your_name: 'Alice',
       their_name: null,
       roomToken: 'token',
     });
     expect(signRoomToken).toHaveBeenCalledWith('1', 'your', 'Alice');
+  });
+
+  test('returns 409 when two distinct names already present and third joins', async () => {
+    vi.resetModules();
+    let upsertCalled = false;
+    vi.doMock('@/lib/supabase', () => ({
+      createAdminClient: () => ({
+        from: (table: string) => {
+          if (table === 'rooms') {
+            return {
+              select: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({ data: { id: '1' }, error: null }),
+                }),
+              }),
+            };
+          }
+          if (table === 'status') {
+            return {
+              select: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({
+                    data: { your_name: 'Alice', their_name: 'Bob' },
+                    error: null,
+                  }),
+                }),
+              }),
+              upsert: () => {
+                upsertCalled = true;
+                return {
+                  select: () => ({
+                    single: async () => ({
+                      data: { your_name: 'Alice', their_name: 'Bob' },
+                      error: null,
+                    }),
+                  }),
+                };
+              },
+            };
+          }
+          throw new Error('unexpected table ' + table);
+        },
+      }),
+    }));
+    vi.doMock('@/lib/roomToken', () => ({ signRoomToken: vi.fn() }));
+
+    const { POST } = await import('../app/api/room/route');
+    const req = { json: async () => ({ code: 'abc', name: 'Charlie' }) } as unknown as NextRequest;
+    const res = await POST(req);
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'room full' });
+    expect(upsertCalled).toBe(false);
   });
 });
