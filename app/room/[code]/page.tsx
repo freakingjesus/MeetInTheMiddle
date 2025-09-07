@@ -175,9 +175,8 @@ export default function RoomPage({ params }: { params: { code: string } }) {
           />
           {!yourReady && (
             <button
-              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
+              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95"
               onClick={() => submit('your', yourText)}
-              disabled={yourReady}
             >
               Submit
             </button>
@@ -199,9 +198,8 @@ export default function RoomPage({ params }: { params: { code: string } }) {
           />
           {!theirReady && (
             <button
-              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
+              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95"
               onClick={() => submit('their', theirText)}
-              disabled={theirReady}
             >
               Submit
             </button>
