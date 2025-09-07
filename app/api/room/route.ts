@@ -135,12 +135,13 @@ export async function POST(req: NextRequest) {
 
     // Optional realtime broadcast; don't block on failures
     try {
-      // @ts-expect-error - supabase-js Realtime channel may or may not be present on this client
-      adminClient.channel?.(`room-${roomCode}`)?.send?.({
-        type: 'broadcast',
-        event: 'NAME_CHANGE',
-        payload: { who: side, name: trimmed } satisfies NameChangePayload,
-      });
+      if (adminClient.channel) {
+        adminClient.channel(`room-${roomCode}`).send({
+          type: 'broadcast',
+          event: 'NAME_CHANGE',
+          payload: { who: side, name: trimmed } satisfies NameChangePayload,
+        });
+      }
     } catch (e) {
       console.warn('Realtime NAME_CHANGE broadcast failed (non-fatal):', e);
     }
