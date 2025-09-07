@@ -20,8 +20,18 @@ describe('POST /api/generate', () => {
               }),
             };
           }
+          if (table === 'rooms') {
+            return {
+              select: () => ({
+                eq: () => ({
+                  single: async () => ({ data: { code: 'abc' } }),
+                }),
+              }),
+            };
+          }
           throw new Error('unexpected table ' + table);
         },
+        channel: () => ({ send: vi.fn() }),
       }),
     }));
     vi.doMock('@/lib/roomToken', () => ({ verifyRoomToken: () => 'room1' }));

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [code, setCode] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -14,10 +15,12 @@ export default function Home() {
       const res = await fetch('/api/room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: roomCode }),
+        body: JSON.stringify({ code: roomCode, name }),
       });
       const data = await res.json();
       localStorage.setItem(`room-token-${roomCode}`, data.roomToken);
+      localStorage.setItem(`room-side-${roomCode}`, data.side);
+      if (name) localStorage.setItem(`room-name-${roomCode}`, name);
       router.push(`/room/${roomCode}`);
     } finally {
       setIsLoading(false);
@@ -28,6 +31,12 @@ export default function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
       <h1 className="text-3xl font-bold">Meet in the Middle</h1>
       <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="First name"
+        className="border p-2 rounded w-48 text-center"
+      />
+      <input
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder="6-char room code"
@@ -36,7 +45,7 @@ export default function Home() {
       />
       <button
         onClick={enterRoom}
-        disabled={isLoading}
+        disabled={isLoading || !name.trim()}
         className="bg-blue-500 text-white px-4 py-2 rounded transition-colors transition-transform hover:bg-blue-600 active:scale-95 disabled:opacity-50"
       >
         {isLoading
