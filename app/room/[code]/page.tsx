@@ -108,7 +108,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             disabled={yourReady}
           />
           <button
-            className="bg-blue-500 text-white px-2 py-1 rounded self-start"
+            className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
             onClick={() => submit('your', yourText)}
             disabled={yourReady}
           >
@@ -130,7 +130,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             disabled={theirReady}
           />
           <button
-            className="bg-blue-500 text-white px-2 py-1 rounded self-start"
+            className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
             onClick={() => submit('their', theirText)}
             disabled={theirReady}
           >
@@ -141,7 +141,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       {yourReady && theirReady && (
         <button
           onClick={generate}
-          className="bg-purple-500 text-white px-4 py-2 rounded"
+          className="bg-purple-500 text-white px-4 py-2 rounded cursor-pointer transition-all hover:bg-purple-600 active:bg-purple-700 active:scale-95 disabled:opacity-50"
           disabled={generating}
         >
           {generating ? `Calling Gemini... ${elapsed}s` : 'Generate Neutral Summary'}
