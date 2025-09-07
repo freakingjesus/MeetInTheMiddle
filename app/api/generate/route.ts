@@ -50,6 +50,18 @@ export async function POST(req: NextRequest) {
       summary = parseGeminiResponse(text);
     }
 
+    const { data: room } = await adminClient
+      .from("rooms")
+      .select("code")
+      .eq("id", roomId)
+      .single();
+
+    if (room?.code) {
+      adminClient
+        .channel(`room-${room.code}`)
+        .send({ type: "broadcast", event: "SUMMARY", payload: summary });
+    }
+
     return NextResponse.json(summary);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "unknown error";

@@ -34,6 +34,11 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         if (payload.who === 'your') setYourReady(payload.ready);
         if (payload.who === 'their') setTheirReady(payload.ready);
       })
+      .on('broadcast', { event: 'SUMMARY' }, ({ payload }) => {
+        setSummary(payload as GeminiSummary);
+        setYourReady(false);
+        setTheirReady(false);
+      })
       .subscribe();
     return () => {
       client.removeChannel(channel);
