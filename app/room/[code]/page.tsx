@@ -51,6 +51,16 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       });
     const channel = client
       .channel(`room-${code}`)
+      .on('broadcast', { event: 'ENTRY_SUBMITTED' }, ({ payload }) => {
+        if (payload.side === 'your') {
+          setYourText(payload.content);
+          setYourReady(true);
+        }
+        if (payload.side === 'their') {
+          setTheirText(payload.content);
+          setTheirReady(true);
+        }
+      })
       .on('broadcast', { event: 'READY_CHANGE' }, ({ payload }) => {
         if (payload.who === 'your') setYourReady(payload.ready);
         if (payload.who === 'their') setTheirReady(payload.ready);
@@ -155,13 +165,15 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             onChange={(e) => setYourText(e.target.value)}
             disabled={yourReady}
           />
-          <button
-            className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
-            onClick={() => submit('your', yourText)}
-            disabled={yourReady}
-          >
-            Submit
-          </button>
+          {!yourReady && (
+            <button
+              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
+              onClick={() => submit('your', yourText)}
+              disabled={yourReady}
+            >
+              Submit
+            </button>
+          )}
         </div>
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -177,13 +189,15 @@ export default function RoomPage({ params }: { params: { code: string } }) {
             onChange={(e) => setTheirText(e.target.value)}
             disabled={theirReady}
           />
-          <button
-            className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
-            onClick={() => submit('their', theirText)}
-            disabled={theirReady}
-          >
-            Submit
-          </button>
+          {!theirReady && (
+            <button
+              className="bg-blue-500 text-white px-2 py-1 rounded self-start cursor-pointer transition-all hover:bg-blue-600 active:bg-blue-700 active:scale-95 disabled:opacity-50"
+              onClick={() => submit('their', theirText)}
+              disabled={theirReady}
+            >
+              Submit
+            </button>
+          )}
         </div>
       </div>
       {yourReady && theirReady && (

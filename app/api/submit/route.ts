@@ -23,9 +23,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'room not found' }, { status: 404 });
   }
 
-  adminClient
-    .channel(`room-${room.code}`)
-    .send({ type: 'broadcast', event: 'READY_CHANGE', payload: { who: side, ready: true } });
+  const channel = adminClient.channel(`room-${room.code}`);
+  channel.send({
+    type: 'broadcast',
+    event: 'ENTRY_SUBMITTED',
+    payload: { side, content },
+  });
+  channel.send({
+    type: 'broadcast',
+    event: 'READY_CHANGE',
+    payload: { who: side, ready: true },
+  });
 
   return NextResponse.json({ ok: true });
 }
