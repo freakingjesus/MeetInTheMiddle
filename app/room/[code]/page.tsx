@@ -13,19 +13,40 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [yourName, setYourName] = useState('');
+  const [theirName, setTheirName] = useState('');
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem(`room-token-${code}`) : null;
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(`room-token-${code}`)
+        : null;
+    const storedSide =
+      typeof window !== 'undefined'
+        ? (localStorage.getItem(
+            `room-side-${code}`
+          ) as 'your' | 'their' | null)
+        : null;
+    const storedName =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(`room-name-${code}`)
+        : null;
+    if (storedSide && storedName) {
+      if (storedSide === 'your') setYourName(storedName);
+      else setTheirName(storedName);
+    }
     if (!token) return;
     const client = createBrowserClient(token);
     client
       .from('status')
-      .select('your_ready, their_ready')
+      .select('your_ready, their_ready, your_name, their_name')
       .single()
       .then((res) => {
         if (res.data) {
           setYourReady(res.data.your_ready);
           setTheirReady(res.data.their_ready);
+          if (res.data.your_name) setYourName(res.data.your_name);
+          if (res.data.their_name) setTheirName(res.data.their_name);
         }
       });
     const channel = client
@@ -33,6 +54,10 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       .on('broadcast', { event: 'READY_CHANGE' }, ({ payload }) => {
         if (payload.who === 'your') setYourReady(payload.ready);
         if (payload.who === 'their') setTheirReady(payload.ready);
+      })
+      .on('broadcast', { event: 'NAME_CHANGE' }, ({ payload }) => {
+        if (payload.who === 'your') setYourName(payload.name);
+        if (payload.who === 'their') setTheirName(payload.name);
       })
       .on('broadcast', { event: 'SUMMARY' }, ({ payload }) => {
         setSummary(payload as GeminiSummary);
@@ -101,7 +126,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <img src="/assets/boxing.svg" alt="boxing" className="w-6 h-6" />
-            <span>Your Side</span>
+            <span>{yourName || 'Your Side'}</span>
             <span className={`text-sm px-2 rounded ${yourReady ? 'bg-green-200' : 'bg-gray-200'}`}>
               {yourReady ? 'Ready' : 'Waiting'}
             </span>
@@ -123,7 +148,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <div className="flex-1 flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <img src="/assets/boxing.svg" alt="boxing" className="w-6 h-6" />
-            <span>Their Side</span>
+            <span>{theirName || 'Their Side'}</span>
             <span className={`text-sm px-2 rounded ${theirReady ? 'bg-green-200' : 'bg-gray-200'}`}>
               {theirReady ? 'Ready' : 'Waiting'}
             </span>

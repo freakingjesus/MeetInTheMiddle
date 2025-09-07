@@ -9,11 +9,16 @@ const schema = z.object({
 
 export type GeminiSummary = z.infer<typeof schema>;
 
-export async function callGemini(your: string, their: string): Promise<string> {
+export async function callGemini(
+  your: string,
+  their: string,
+  yourName = 'Your Side',
+  theirName = 'Their Side'
+): Promise<string> {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     return JSON.stringify({
-      summary: `Your Side: ${your}\nTheir Side: ${their}`,
+      summary: `${yourName}: ${your}\n${theirName}: ${their}`,
       nextSteps: [],
       toneNotes: '',
     });
@@ -109,7 +114,7 @@ Respond in JSON with keys "summary", "nextSteps", and "toneNotes".`;
     model: 'gemini-2.5-pro',
     systemInstruction: system,
   });
-  const user = `Your Side:\n${your}\n\nTheir Side:\n${their}`;
+  const user = `${yourName}:\n${your}\n\n${theirName}:\n${their}`;
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: { responseMimeType: 'application/json' },
