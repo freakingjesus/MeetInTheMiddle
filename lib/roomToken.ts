@@ -14,7 +14,7 @@ export function signRoomToken(roomId: string): string {
 
 export function verifyRoomToken(token: string): string | null {
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload & {
+    const payload = jwt.verify(token, secret!) as jwt.JwtPayload & {
       room_id?: string;
     };
     return payload.room_id ?? null;
