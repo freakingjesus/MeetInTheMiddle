@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
     const { data: entries, error: entriesError } = await adminClient
       .from("entries")
       .select("side, content")
-      .eq("room_id", roomId);
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false });
 
     const { data: status, error: statusError } = await adminClient
       .from("status")
