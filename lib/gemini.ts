@@ -13,12 +13,28 @@ export async function callGemini(
   your: string,
   their: string,
   yourName = 'Your Side',
-  theirName = 'Their Side'
+  theirName = 'Their Side',
+  priorSummary?: GeminiSummary
 ): Promise<string> {
   const apiKey = process.env.GOOGLE_API_KEY;
+  const historyLines: string[] = [];
+  if (priorSummary) {
+    historyLines.push('Previously we agreed on the following summary:');
+    historyLines.push(priorSummary.summary);
+    if (priorSummary.nextSteps.length) {
+      historyLines.push('Planned next steps:');
+      historyLines.push(...priorSummary.nextSteps.map((step) => `- ${step}`));
+    }
+    if (priorSummary.toneNotes) {
+      historyLines.push(`Tone notes to carry forward: ${priorSummary.toneNotes}`);
+    }
+    historyLines.push('Now the new updates are:');
+    historyLines.push('');
+  }
+  const historyContext = historyLines.length ? `${historyLines.join('\n')}\n` : '';
   if (!apiKey) {
     return JSON.stringify({
-      summary: `${yourName}: ${your}\n${theirName}: ${their}`,
+      summary: `${historyContext}${yourName}: ${your}\n${theirName}: ${their}`.trim(),
       nextSteps: [],
       toneNotes: '',
     });
@@ -114,7 +130,7 @@ Respond in JSON with keys "summary", "nextSteps", and "toneNotes".`;
     model: 'gemini-2.5-pro',
     systemInstruction: system,
   });
-  const user = `${yourName}:\n${your}\n\n${theirName}:\n${their}`;
+  const user = `${historyContext}${yourName}:\n${your}\n\n${theirName}:\n${their}`.trim();
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: { responseMimeType: 'application/json' },

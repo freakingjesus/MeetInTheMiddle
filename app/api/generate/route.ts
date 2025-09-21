@@ -28,11 +28,39 @@ export async function POST(req: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    const { data: entries, error: entriesError } = await adminClient
-      .from("entries")
-      .select("side, content")
+    const { data: previousSummaries, error: previousSummariesError } = await adminClient
+      .from("summaries")
+      .select("content, created_at")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false });
+
+    if (previousSummariesError) {
+      throw new Error(`Failed to fetch previous summaries: ${previousSummariesError.message}`);
+    }
+
+    const latestSummaryRow = previousSummaries?.[0];
+    let lastSummaryAt: string | undefined;
+    let previousSummary: GeminiSummary | undefined;
+    if (latestSummaryRow) {
+      lastSummaryAt = latestSummaryRow.created_at ?? undefined;
+      const rawContent = latestSummaryRow.content;
+      if (typeof rawContent === "string") {
+        previousSummary = parseGeminiResponse(rawContent);
+      } else if (rawContent) {
+        previousSummary = parseGeminiResponse(JSON.stringify(rawContent));
+      }
+    }
+
+    let entriesQuery = adminClient
+      .from("entries")
+      .select("side, content, created_at")
+      .eq("room_id", roomId);
+
+    if (lastSummaryAt) {
+      entriesQuery = entriesQuery.gt("created_at", lastSummaryAt);
+    }
+
+    const { data: entries, error: entriesError } = await entriesQuery.order("created_at", { ascending: true });
 
     const { data: status, error: statusError } = await adminClient
       .from("status")
@@ -48,8 +76,15 @@ export async function POST(req: NextRequest) {
       throw new Error(`Failed to fetch entries: ${entriesError.message}`);
     }
 
-    const your = entries?.find((e) => e.side === "your")?.content ?? "";
-    const their = entries?.find((e) => e.side === "their")?.content ?? "";
+    const relevantEntries = entries ?? [];
+    const your = relevantEntries
+      .filter((entry) => entry.side === "your")
+      .map((entry) => entry.content)
+      .join("\n\n");
+    const their = relevantEntries
+      .filter((entry) => entry.side === "their")
+      .map((entry) => entry.content)
+      .join("\n\n");
     const yourName = status?.your_name ?? "Your Side";
     const theirName = status?.their_name ?? "Their Side";
 
@@ -59,7 +94,7 @@ export async function POST(req: NextRequest) {
     if (!process.env.GOOGLE_API_KEY) {
       summary = { summary: "Missing Google API key", nextSteps: [], toneNotes: "" };
     } else {
-      const text = await callGemini(your, their, yourName, theirName);
+      const text = await callGemini(your, their, yourName, theirName, previousSummary);
       summary = parseGeminiResponse(text);
     }
 
