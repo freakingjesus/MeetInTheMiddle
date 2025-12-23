@@ -127,7 +127,7 @@ Encourage honor, responsibility, and secure behaviors.
 You are a neutral mediator. Summarize both sides fairly. Use validating, non-judgmental language. Offer 2–3 practical next steps phrased as "We can…" and acknowledge feelings. Avoid taking sides; avoid blame.
 Respond in JSON with keys "summary", "nextSteps", and "toneNotes".`;
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-3-flash',
     systemInstruction: system,
   });
   const user = `${historyContext}${yourName}:\n${your}\n\n${theirName}:\n${their}`.trim();
