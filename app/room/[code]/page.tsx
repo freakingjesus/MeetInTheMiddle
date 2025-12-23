@@ -117,6 +117,10 @@ export default function RoomPage({ params }: { params: { code: string } }) {
 
   const generate = async () => {
     const token = localStorage.getItem(`room-token-${code}`);
+    if (!token) {
+      setError('Missing room token. Please return to the home page and rejoin.');
+      return;
+    }
     setError(null);
     setGenerating(true);
     setElapsed(0);
@@ -128,7 +132,13 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         body: JSON.stringify({ roomToken: token }),
       });
       if (!res.ok) {
-        setError('Failed to generate summary');
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 429 && typeof data?.retryAfterMs === 'number') {
+          const retrySeconds = Math.ceil(data.retryAfterMs / 1000);
+          setError(`Please wait ${retrySeconds}s before generating another summary.`);
+        } else {
+          setError(data?.error || 'Failed to generate summary');
+        }
         setSummary(null);
         return;
       }

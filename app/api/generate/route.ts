@@ -19,12 +19,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid token" }, { status: 401 });
     }
 
-    // naive in-memory rate limit per room (10s)
+    // naive in-memory rate limit per room (3s)
     const last = lastGen.get(roomId) ?? 0;
-    if (Date.now() - last < 10_000) {
-      return NextResponse.json({ error: "rate limited" }, { status: 429 });
+    const cooldownMs = 3_000;
+    const now = Date.now();
+    if (now - last < cooldownMs) {
+      return NextResponse.json(
+        { error: "rate limited", retryAfterMs: cooldownMs - (now - last) },
+        { status: 429 }
+      );
     }
-    lastGen.set(roomId, Date.now());
+    lastGen.set(roomId, now);
 
     const adminClient = createAdminClient();
 
